@@ -5,13 +5,24 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+  
+  The **three core actions** that a user must have
+    - set tasks/constraints
+    - build schedule
+    - add/edit basic info & preferences
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+  I included the Owner, Pet, Task, and Scheduler classes. The Owner Class is the "master" class with the ability to use the Scheduler, manage Task, and own the Pet. The Scheduler schedules Task, and Task is assigned to Pet.
+
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
-
+  
+  One of the major changes I made during implementation were the Scheduler attributes. Before, I passed pet_names, owner_name, and tasks are passed and stored as independent attributes. Now, owner_name is the only attribute being passed and stored, where tasks is initialized as an empty list, and pet_names is a computed property derived from tasks.
+  
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
