@@ -10,6 +10,7 @@ class Task:
     duration: int            # minutes
     frequency: str           # "daily" | "weekly" | "monthly"
                              # daily=7x/wk, weekly=1x/wk, monthly=~1x/4wks
+    constraints: List[str] = field(default_factory=list)  # e.g. ["morning only", "before noon"]
     completed: bool = False
 
 
