@@ -3,18 +3,22 @@ from typing import List
 
 
 @dataclass
+class Task:
+    title: str
+    pet_name: str            # string ref to avoid circular dependency with Pet
+    start_time: int          # hour of day, e.g. 8 = 8am
+    duration: int            # minutes
+    frequency: str           # "daily" | "weekly" | "monthly"
+                             # daily=7x/wk, weekly=1x/wk, monthly=~1x/4wks
+    completed: bool = False
+
+
+@dataclass
 class Pet:
     pet_name: str
     owner_name: str
     pet_id: str
-
-
-@dataclass
-class Task:
-    title: str
-    pet: Pet
-    duration: int           # in minutes
-    constraints: List[str] = field(default_factory=list)  # e.g. ["morning only", "before 9am"]
+    tasks: List[Task] = field(default_factory=list)
 
 
 class Scheduler:
@@ -22,21 +26,105 @@ class Scheduler:
         self.owner_name: str = owner_name
         self.tasks: List[Task] = []
 
+    #FIX???
     @property
     def pet_names(self) -> List[str]:
-        return list({task.pet.pet_name for task in self.tasks})
+        return list({task.pet_name for task in self.tasks})
 
     def schedule_task(self, task: Task) -> None:
-        pass
+        """Add a task to the scheduler's task list."""
+        self.tasks.append(task)
+
+    def _group_tasks_by_pet(self) -> dict:
+        """Return a dict mapping each pet name to its list of tasks."""
+        groups: dict = {}
+        for task in self.tasks:
+            groups.setdefault(task.pet_name, []).append(task)
+        return groups
+
+    def _tasks_overlap(self, first: Task, second: Task) -> bool:
+        """Return True if first task's end time runs into second task's start time."""
+        first_end = first.start_time + first.duration / 60
+        return first_end > second.start_time
+
+    def _pet_has_conflicts(self, tasks: List[Task]) -> bool:
+        """Return True if any two adjacent tasks for one pet overlap."""
+        sorted_tasks = sorted(tasks, key=lambda t: t.start_time)
+        for i in range(len(sorted_tasks) - 1):
+            if self._tasks_overlap(sorted_tasks[i], sorted_tasks[i + 1]):
+                return True
+        return False
 
     def verify_schedule(self) -> bool:
-        pass
+        """Return True if no pet has overlapping tasks."""
+        for tasks in self._group_tasks_by_pet().values():
+            if self._pet_has_conflicts(tasks):
+                return False
+        return True
 
-    def generate_schedule(self) -> List[Task]:
-        pass
+    def _sorted_tasks(self) -> List[Task]:
+        """Return tasks sorted by start time."""
+        return sorted(self.tasks, key=lambda t: t.start_time)
 
-    def explain_schedule(self) -> str:
-        pass
+    def _format_hour(self, hour: int) -> str:
+        """Convert a 24-hour integer to a readable 12-hour string, e.g. 14 -> '2pm'."""
+        am_pm = "am" if hour < 12 else "pm"
+        display_hour = hour if hour <= 12 else hour - 12
+        return f"{display_hour}:00{am_pm}"
+
+    def _frequency_label(self, frequency: str) -> str:
+        """Return a human-readable frequency description."""
+        labels = {
+            "daily": "daily (every day)",
+            "weekly": "weekly (once a week)",
+            "monthly": "monthly (once every ~4 weeks)",
+        }
+        return labels.get(frequency, frequency)
+
+    def generate_schedule(self) -> str:
+        """Return a formatted human-readable summary of the schedule."""
+        if not self.tasks:
+            return "No tasks scheduled."
+
+        lines = [f"Daily schedule for {self.owner_name}:\n"]
+        for task in self._sorted_tasks():
+            status = "done" if task.completed else "pending"
+            lines.append(
+                f"  {self._format_hour(task.start_time)} — {task.title} ({task.pet_name})"
+                f" | {task.duration} min | {task.frequency} | {status}"
+            )
+        return "\n".join(lines)
+
+    def explain_schedule(self, preferences: dict = None) -> str:
+        """Return a reasoning summary explaining why each task is scheduled when it is."""
+        if not self.tasks:
+            return "No tasks to explain."
+
+        preferences = preferences or {}
+        sorted_tasks = self._sorted_tasks()
+        lines = [f"Schedule explanation for {self.owner_name}:\n"]
+
+        for i, task in enumerate(sorted_tasks):
+            lines.append(f"{i + 1}. {task.title} ({task.pet_name}) at {self._format_hour(task.start_time)}")
+            lines.append(f"   - Frequency: {self._frequency_label(task.frequency)}")
+
+            if task.constraints:
+                lines.append(f"   - Constraints: {', '.join(task.constraints)}")
+
+            if preferences:
+                lines.append(f"   - Owner preferences applied: {', '.join(f'{k}: {v}' for k, v in preferences.items())}")
+
+            if i == 0:
+                lines.append(f"   - Order: first task of the day")
+            else:
+                prev = sorted_tasks[i - 1]
+                prev_end = prev.start_time + prev.duration / 60
+                prev_end_str = self._format_hour(int(prev_end))
+                lines.append(f"   - Order: follows {prev.title} (starts after {prev_end_str} end time)")
+
+            lines.append("")
+
+        return "\n".join(lines)
 
 
 class Owner:
@@ -45,23 +133,44 @@ class Owner:
         self.owner_id: str = owner_id
         self.preferences: dict = preferences or {}
         self.pets: List[Pet] = []
-        self.tasks: List[Task] = []
         self.scheduler: Scheduler = Scheduler(owner_name=self.owner_name)
 
     def add_task(self, task: Task) -> None:
-        pass
-
-    def build_schedule(self) -> None:
-        pass
+        """Add a task to the matching pet's task list and the scheduler."""
+        for pet in self.pets:
+            if pet.pet_name == task.pet_name:
+                pet.tasks.append(task)
+                self.scheduler.schedule_task(task)
+                return
+        raise ValueError(f"No pet named '{task.pet_name}' found.")
 
     def delete_task(self, task: Task) -> None:
-        pass
+        """Remove a task from the matching pet's task list and the scheduler."""
+        for pet in self.pets:
+            if pet.pet_name == task.pet_name and task in pet.tasks:
+                pet.tasks.remove(task)
+                self.scheduler.tasks.remove(task)
+                return
+        raise ValueError(f"Task '{task.title}' not found.")
+
+    def complete_task(self, task: Task) -> None:
+        """Mark a task as completed."""
+        task.completed = True
 
     def edit_preferences(self, preferences: dict) -> None:
-        pass
+        """Merge new preferences into the owner's existing preferences."""
+        self.preferences.update(preferences)
 
     def view_tasks(self) -> List[Task]:
-        pass
+        """Return a flat list of all tasks across all pets."""
+        return [task for pet in self.pets for task in pet.tasks]
 
-    def view_schedule(self) -> List[Task]:
-        pass
+    def build_schedule(self) -> None:
+        """Sync all pet tasks into the scheduler and verify for conflicts."""
+        self.scheduler.tasks = self.view_tasks()
+        if not self.scheduler.verify_schedule():
+            raise ValueError("Schedule has time conflicts. Please adjust task times.")
+
+    def view_schedule(self) -> str:
+        """Return the formatted schedule string."""
+        return self.scheduler.generate_schedule()
