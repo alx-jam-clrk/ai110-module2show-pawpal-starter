@@ -24,32 +24,65 @@ class Pet:
 
 class Scheduler:
     def __init__(self, owner_name: str):
+        """Initialize the scheduler for a given owner with an empty task list.
+
+        Args:
+            owner_name: The name of the owner this scheduler belongs to.
+        """
         self.owner_name: str = owner_name
         self.tasks: List[Task] = []
 
     #FIX???
     @property
     def pet_names(self) -> List[str]:
+        """Return a deduplicated list of pet names from all scheduled tasks.
+
+        Returns:
+            A list of unique pet name strings derived from self.tasks.
+        """
         return list({task.pet_name for task in self.tasks})
 
     def schedule_task(self, task: Task) -> None:
-        """Add a task to the scheduler's task list."""
+        """Add a task to the scheduler's task list.
+
+        Args:
+            task: The Task object to add to the schedule.
+        """
         self.tasks.append(task)
 
     def _group_tasks_by_pet(self) -> dict:
-        """Return a dict mapping each pet name to its list of tasks."""
+        """Return a dict mapping each pet name to its list of tasks.
+
+        Returns:
+            A dict where keys are pet name strings and values are lists of Tasks.
+        """
         groups: dict = {}
         for task in self.tasks:
             groups.setdefault(task.pet_name, []).append(task)
         return groups
 
     def _tasks_overlap(self, first: Task, second: Task) -> bool:
-        """Return True if first task's end time runs into second task's start time."""
+        """Return True if first task's end time runs into second task's start time.
+
+        Args:
+            first: The earlier task.
+            second: The later task to compare against.
+
+        Returns:
+            True if the first task ends after the second task starts, else False.
+        """
         first_end = first.start_time + first.duration / 60
         return first_end > second.start_time
 
     def _pet_has_conflicts(self, tasks: List[Task]) -> bool:
-        """Return True if any two adjacent tasks for one pet overlap."""
+        """Return True if any two adjacent tasks for one pet overlap.
+
+        Args:
+            tasks: A list of Tasks belonging to a single pet.
+
+        Returns:
+            True if at least one pair of adjacent tasks overlaps, else False.
+        """
         sorted_tasks = sorted(tasks, key=lambda t: t.start_time)
         for i in range(len(sorted_tasks) - 1):
             if self._tasks_overlap(sorted_tasks[i], sorted_tasks[i + 1]):
@@ -57,24 +90,46 @@ class Scheduler:
         return False
 
     def verify_schedule(self) -> bool:
-        """Return True if no pet has overlapping tasks."""
+        """Return True if no pet has overlapping tasks.
+
+        Returns:
+            True if the schedule is conflict-free, False if any pet has overlapping tasks.
+        """
         for tasks in self._group_tasks_by_pet().values():
             if self._pet_has_conflicts(tasks):
                 return False
         return True
 
     def _sorted_tasks(self) -> List[Task]:
-        """Return tasks sorted by start time."""
+        """Return tasks sorted by start time.
+
+        Returns:
+            A list of Task objects ordered from earliest to latest start_time.
+        """
         return sorted(self.tasks, key=lambda t: t.start_time)
 
     def _format_hour(self, hour: int) -> str:
-        """Convert a 24-hour integer to a readable 12-hour string, e.g. 14 -> '2pm'."""
+        """Convert a 24-hour integer to a readable 12-hour string.
+
+        Args:
+            hour: An integer hour in 24-hour format, e.g. 14.
+
+        Returns:
+            A formatted string like '2:00pm' or '8:00am'.
+        """
         am_pm = "am" if hour < 12 else "pm"
         display_hour = hour if hour <= 12 else hour - 12
         return f"{display_hour}:00{am_pm}"
 
     def _frequency_label(self, frequency: str) -> str:
-        """Return a human-readable frequency description."""
+        """Return a human-readable frequency description.
+
+        Args:
+            frequency: A frequency string, one of 'daily', 'weekly', or 'monthly'.
+
+        Returns:
+            A plain-English description of the frequency, or the original string if unrecognized.
+        """
         labels = {
             "daily": "daily (every day)",
             "weekly": "weekly (once a week)",
@@ -83,7 +138,12 @@ class Scheduler:
         return labels.get(frequency, frequency)
 
     def generate_schedule(self) -> str:
-        """Return a formatted human-readable summary of the schedule."""
+        """Return a formatted human-readable summary of the schedule.
+
+        Returns:
+            A multi-line string listing all tasks sorted by start time,
+            or 'No tasks scheduled.' if the task list is empty.
+        """
         if not self.tasks:
             return "No tasks scheduled."
 
@@ -97,7 +157,15 @@ class Scheduler:
         return "\n".join(lines)
 
     def explain_schedule(self, preferences: dict = None) -> str:
-        """Return a reasoning summary explaining why each task is scheduled when it is."""
+        """Return a reasoning summary explaining why each task is scheduled when it is.
+
+        Args:
+            preferences: An optional dict of owner preferences to include in the explanation.
+
+        Returns:
+            A multi-line string with a numbered explanation for each task,
+            or 'No tasks to explain.' if the task list is empty.
+        """
         if not self.tasks:
             return "No tasks to explain."
 
@@ -130,6 +198,13 @@ class Scheduler:
 
 class Owner:
     def __init__(self, owner_name: str, owner_id: str, preferences: dict = None):
+        """Initialize an Owner with an empty pet roster and a linked Scheduler.
+
+        Args:
+            owner_name: The owner's display name.
+            owner_id: A unique identifier for the owner.
+            preferences: An optional dict of scheduling preferences.
+        """
         self.owner_name: str = owner_name
         self.owner_id: str = owner_id
         self.preferences: dict = preferences or {}
@@ -137,7 +212,14 @@ class Owner:
         self.scheduler: Scheduler = Scheduler(owner_name=self.owner_name)
 
     def add_task(self, task: Task) -> None:
-        """Add a task to the matching pet's task list and the scheduler."""
+        """Add a task to the matching pet's task list and register it with the scheduler.
+
+        Args:
+            task: The Task object to add. Its pet_name must match an existing pet.
+
+        Raises:
+            ValueError: If no pet with the given pet_name exists on this owner.
+        """
         for pet in self.pets:
             if pet.pet_name == task.pet_name:
                 pet.tasks.append(task)
@@ -146,7 +228,14 @@ class Owner:
         raise ValueError(f"No pet named '{task.pet_name}' found.")
 
     def delete_task(self, task: Task) -> None:
-        """Remove a task from the matching pet's task list and the scheduler."""
+        """Remove a task from the matching pet's task list and the scheduler.
+
+        Args:
+            task: The Task object to remove.
+
+        Raises:
+            ValueError: If the task is not found on any pet.
+        """
         for pet in self.pets:
             if pet.pet_name == task.pet_name and task in pet.tasks:
                 pet.tasks.remove(task)
@@ -155,23 +244,43 @@ class Owner:
         raise ValueError(f"Task '{task.title}' not found.")
 
     def complete_task(self, task: Task) -> None:
-        """Mark a task as completed."""
+        """Mark a task as completed.
+
+        Args:
+            task: The Task object to mark as done.
+        """
         task.completed = True
 
     def edit_preferences(self, preferences: dict) -> None:
-        """Merge new preferences into the owner's existing preferences."""
+        """Merge new key-value pairs into the owner's existing preferences.
+
+        Args:
+            preferences: A dict of preference updates to apply.
+        """
         self.preferences.update(preferences)
 
     def view_tasks(self) -> List[Task]:
-        """Return a flat list of all tasks across all pets."""
+        """Return a flat list of all tasks across all pets.
+
+        Returns:
+            A list of Task objects collected from every pet's task list.
+        """
         return [task for pet in self.pets for task in pet.tasks]
 
     def build_schedule(self) -> None:
-        """Sync all pet tasks into the scheduler and verify for conflicts."""
+        """Sync all pet tasks into the scheduler and verify for conflicts.
+
+        Raises:
+            ValueError: If any pet has overlapping tasks after syncing.
+        """
         self.scheduler.tasks = self.view_tasks()
         if not self.scheduler.verify_schedule():
             raise ValueError("Schedule has time conflicts. Please adjust task times.")
 
     def view_schedule(self) -> str:
-        """Return the formatted schedule string."""
+        """Return the formatted schedule string from the scheduler.
+
+        Returns:
+            A multi-line string summary of today's schedule.
+        """
         return self.scheduler.generate_schedule()
