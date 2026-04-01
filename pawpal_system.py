@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import List
 
 
@@ -50,6 +50,22 @@ class Scheduler:
         """
         self.tasks.append(task)
 
+    def schedule_next_occurrence(self, task: Task) -> Task:
+        """Create and schedule the next occurrence of a recurring task.
+
+        Args:
+            task: A completed Task with a 'daily', 'weekly', or 'monthly' frequency.
+
+        Returns:
+            The new Task for the next occurrence, or None if frequency is unrecognized.
+        """
+        if task.frequency not in ("daily", "weekly", "monthly"):
+            return None
+
+        next_task = replace(task, completed=False)
+        self.schedule_task(next_task)
+        return next_task
+
     def _group_tasks_by_pet(self) -> dict:
         """Return a dict mapping each pet name to its list of tasks.
 
@@ -100,13 +116,29 @@ class Scheduler:
                 return False
         return True
 
-    def _sorted_tasks(self) -> List[Task]:
+    def sort_by_time(self) -> List[Task]:
         """Return tasks sorted by start time.
 
         Returns:
             A list of Task objects ordered from earliest to latest start_time.
         """
         return sorted(self.tasks, key=lambda t: t.start_time)
+
+    def filter_tasks(self, completed: bool = None, pet_name: str = None) -> List[Task]:
+        """Return tasks filtered by completion status and/or pet name.
+
+        Args:
+            completed: If provided, only return tasks matching this completion status.
+            pet_name: If provided, only return tasks belonging to this pet.
+
+        Returns:
+            A list of Task objects matching all provided filters.
+        """
+        return [
+            t for t in self.tasks
+            if (completed is None or t.completed == completed)
+            and (pet_name is None or t.pet_name == pet_name)
+        ]
 
     def _format_hour(self, hour: int) -> str:
         """Convert a 24-hour integer to a readable 12-hour string.
@@ -148,7 +180,7 @@ class Scheduler:
             return "No tasks scheduled."
 
         lines = [f"Daily schedule for {self.owner_name}:\n"]
-        for task in self._sorted_tasks():
+        for task in self.sort_by_time():
             status = "done" if task.completed else "pending"
             lines.append(
                 f"  {self._format_hour(task.start_time)} — {task.title} ({task.pet_name})"
@@ -170,7 +202,7 @@ class Scheduler:
             return "No tasks to explain."
 
         preferences = preferences or {}
-        sorted_tasks = self._sorted_tasks()
+        sorted_tasks = self.sort_by_time()
         lines = [f"Schedule explanation for {self.owner_name}:\n"]
 
         for i, task in enumerate(sorted_tasks):
@@ -244,12 +276,14 @@ class Owner:
         raise ValueError(f"Task '{task.title}' not found.")
 
     def complete_task(self, task: Task) -> None:
-        """Mark a task as completed.
+        """Mark a task as completed and schedule its next occurrence if recurring.
 
         Args:
             task: The Task object to mark as done.
         """
         task.completed = True
+        if task.frequency in ("daily", "weekly", "monthly"):
+            self.scheduler.schedule_next_occurrence(task)
 
     def edit_preferences(self, preferences: dict) -> None:
         """Merge new key-value pairs into the owner's existing preferences.

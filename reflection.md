@@ -22,7 +22,7 @@
 - If yes, describe at least one change and why you made it.
   
   One of the major changes I made during implementation were the Scheduler attributes. Before, I passed pet_names, owner_name, and tasks are passed and stored as independent attributes. Now, owner_name is the only attribute being passed and stored, where tasks is initialized as an empty list, and pet_names is a computed property derived from tasks.
-  
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
@@ -30,12 +30,22 @@
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+
+  My scheduler prioritizes time and preferences
+
 - How did you decide which constraints mattered most?
+
+  Time and preferences in my opinion are more important than priority because a task can be somewhat implicitly prioritized based on the time in which it was scheduled. Time and preferences are explicit constraints that must be addressed to for the task to be done successfully
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+  One tradeoff my schedular makes is by using the dataclass decorators built-in replace function in schedule_next_occurence(). Although its way easier to read, you lose the meaning of what the line is doing (overwriting a Task instance with a new Task)
+
 - Why is that tradeoff reasonable for this scenario?
+
+  This tradeoff makes sense because the code is already a little cluttered already, so the cleaner the code is, the better
 
 ---
 
@@ -44,7 +54,12 @@
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+
+  I used Claude Code ot help me do all of the above (design, brainstorm, debug, and refactor!)
+
 - What kinds of prompts or questions were most helpful?
+
+  The most helpful prompt I used was when I asked it to ask me clarifying questions until we both understood the what must be implemented
 
 **b. Judgment and verification**
 

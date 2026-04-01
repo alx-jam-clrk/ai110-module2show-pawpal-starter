@@ -22,6 +22,46 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smart Scheduling Features
+
+### Sorting
+
+Tasks can be sorted by start time using `Scheduler.sort_by_time()`, which returns all scheduled tasks ordered from earliest to latest regardless of the order they were added.
+
+```python
+for task in scheduler.sort_by_time():
+    print(task.title, task.start_time)
+```
+
+### Filtering
+
+Tasks can be filtered by completion status, pet name, or both using `Scheduler.filter_tasks()`. All parameters are optional and can be combined.
+
+```python
+scheduler.filter_tasks(completed=False)           # pending tasks only
+scheduler.filter_tasks(pet_name="Mochi")          # one pet's tasks
+scheduler.filter_tasks(completed=True, pet_name="Bella")  # combined
+```
+
+### Conflict Detection
+
+`Scheduler.verify_schedule()` checks whether any pet has overlapping tasks. Tasks are grouped by pet, sorted by start time, and each consecutive pair is checked for overlap based on start time and duration. `Owner.build_schedule()` calls this automatically and raises a `ValueError` if a conflict is found.
+
+```python
+try:
+    owner.build_schedule()
+except ValueError as e:
+    print(f"Warning: {e}")
+```
+
+### Recurring Tasks
+
+When a task is marked complete via `Owner.complete_task()`, a fresh copy is automatically added to the scheduler for daily, weekly, and monthly tasks — keeping the schedule populated without manual re-entry.
+
+```python
+owner.complete_task(walk)  # walk is done; next occurrence queued automatically
+```
+
 ## Getting started
 
 ### Setup
