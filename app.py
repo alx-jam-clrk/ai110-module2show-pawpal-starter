@@ -103,18 +103,54 @@ else:
     all_tasks = owner.view_tasks()
     if all_tasks:
         st.write("Current tasks:")
-        st.table([
-            {
-                "title":           t.title,
-                "pet":             t.pet_name,
-                "start":           f"{t.start_time}:00",
-                "duration (min)":  t.duration,
-                "frequency":       t.frequency,
-                "constraints":     ", ".join(t.constraints) if t.constraints else "—",
-                "done":            t.completed,
-            }
-            for t in all_tasks
-        ])
+
+        # --- Sorting & Filtering controls ---
+        fc1, fc2, fc3 = st.columns(3)
+        with fc1:
+            sort_by_time = st.checkbox("Sort by start time", value=False)
+        with fc2:
+            filter_pet = st.selectbox(
+                "Filter by pet", ["All"] + [p.pet_name for p in owner.pets], key="filter_pet"
+            )
+        with fc3:
+            filter_status = st.selectbox(
+                "Filter by status", ["All", "Pending", "Done"], key="filter_status"
+            )
+
+        # Apply sorting
+        display_tasks = owner.scheduler.sort_by_time() if sort_by_time else list(all_tasks)
+
+        # Apply filters
+        if filter_pet != "All":
+            display_tasks = [t for t in display_tasks if t.pet_name == filter_pet]
+        if filter_status == "Pending":
+            display_tasks = [t for t in display_tasks if not t.completed]
+        elif filter_status == "Done":
+            display_tasks = [t for t in display_tasks if t.completed]
+
+        if display_tasks:
+            st.table([
+                {
+                    "title":           t.title,
+                    "pet":             t.pet_name,
+                    "start":           f"{t.start_time}:00",
+                    "duration (min)":  t.duration,
+                    "frequency":       t.frequency,
+                    "constraints":     ", ".join(t.constraints) if t.constraints else "—",
+                    "done":            t.completed,
+                }
+                for t in display_tasks
+            ])
+        else:
+            st.info("No tasks match the current filters.")
+
+        # --- Conflict detection ---
+        if st.button("Check for conflicts"):
+            owner.scheduler.tasks = owner.view_tasks()
+            if owner.scheduler.verify_schedule():
+                st.success("No conflicts detected. All tasks are clear.")
+            else:
+                st.error("Conflict detected: at least one pet has overlapping tasks. Adjust start times or durations.")
 
         # Mark complete
         with st.expander("Mark a task complete"):

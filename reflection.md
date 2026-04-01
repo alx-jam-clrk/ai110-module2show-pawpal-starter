@@ -64,7 +64,12 @@
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+
+  When I was creating my core implementation for my methods, I was given a HUGE for-loop to verify the schedule has no conflicts, but it was so unreadable that I asked it to refactor into smaller helper functions.
+
 - How did you evaluate or verify what the AI suggested?
+
+  First I asked myself does it makes sense? Then I ask, more importantly, can I understand it from a glance?
 
 ---
 
@@ -78,7 +83,12 @@
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+
+ 3/5 stars
+
 - What edge cases would you test next if you had more time?
+
+I would try to fix the recurring task / pet.tasks sync bug, since they both have their own independent tasks lists
 
 ---
 
