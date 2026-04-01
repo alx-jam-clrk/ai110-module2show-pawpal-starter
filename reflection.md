@@ -78,17 +78,20 @@
 **a. What you tested**
 
 - What behaviors did you test?
+
+I tested the task completion, task addition, sorting by time, recurring logic, and conflict detection
+
 - Why were these tests important?
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 
- 3/5 stars
+ 3/5 stars. I'm confident that the scheduler functions at what is minimally required by the project, but if it would be tested more rigorously, I wouldn't be surprised it broke.
 
 - What edge cases would you test next if you had more time?
 
-I would try to fix the recurring task / pet.tasks sync bug, since they both have their own independent tasks lists
+  I would try to fix the recurring task / pet.tasks sync bug, since they both have their own independent tasks lists
 
 ---
 
@@ -98,10 +101,16 @@ I would try to fix the recurring task / pet.tasks sync bug, since they both have
 
 - What part of this project are you most satisfied with?
 
+  The part of the project I'm most satisfied with is the core implementation logic. Although my initial design was a bit off the mark, my second design was surprisingly good. It reflected mostly, what i think CodePath was aiming for the PawPal+ design. I also implemented a piece of conflict detection logic in the core implementation before I got anywhere close to smart scheduling logic.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+If I had another iteration, I would iron out all the bugs that were mentioned when I asked Claude about all the possible edge cases that could possibly break it. One detail in particular was the recurring task / pet.tasks bug, where they might go out of sync.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+The most important thing I learned in this project was just about how powerful AI is as a drafter. I often have trouble setting up projects and files in a way that would not only make sense but also be structurally sound throughout the development of the project. However, with AI, I can start by understanding the high-level relationships, build my way up, getting more technical as I go. I honestly didn't think I would have enough time to finish this project, but the acceleration that AI provided me amazed me. I'm going to use this process in all of my further work.
