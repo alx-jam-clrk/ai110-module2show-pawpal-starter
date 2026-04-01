@@ -62,6 +62,31 @@ When a task is marked complete via `Owner.complete_task()`, a fresh copy is auto
 owner.complete_task(walk)  # walk is done; next occurrence queued automatically
 ```
 
+## Testing PawPal+
+
+### Running the tests
+
+```bash
+python -m pytest
+```
+
+### What the tests cover
+
+| Area | Tests | What is verified |
+|---|---|---|
+| **Task creation** | 1 | New tasks default to `completed=False` |
+| **Task addition** | 4 | Pet task count increases correctly; unknown pet raises `ValueError`; tasks don't bleed to wrong pet |
+| **Task completion** | 2 | `complete_task()` sets `completed=True`; does not affect other tasks |
+| **Sorting** | 3 | `sort_by_time()` returns chronological order; handles one task and empty scheduler |
+| **Recurrence** | 3 | Completing a daily task adds exactly one new pending task with matching title and start time |
+| **Conflict detection** | 3 | Overlapping tasks for the same pet are flagged; non-overlapping tasks pass; same-time tasks for *different* pets do not conflict |
+
+### Confidence Level
+
+**3 / 5 stars**
+
+The core behaviors — adding tasks, marking completion, sorting, and same-pet conflict detection — are verified and working. Confidence is limited to 3 stars because several known edge cases are not yet covered by tests: recurring tasks are added to `scheduler.tasks` but not back to `pet.tasks` (sync gap), `build_schedule()` overwrites the scheduler and can discard next-occurrence tasks, midnight-crossing durations can produce false conflicts, and `_format_hour` returns `0:00am` for midnight instead of `12:00am`. The tested paths are reliable; the untested edge cases carry real risk.
+
 ## Getting started
 
 ### Setup
