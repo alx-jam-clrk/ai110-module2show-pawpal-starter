@@ -107,10 +107,10 @@ I tested the task completion, task addition, sorting by time, recurring logic, a
 
 - If you had another iteration, what would you improve or redesign?
 
-If I had another iteration, I would iron out all the bugs that were mentioned when I asked Claude about all the possible edge cases that could possibly break it. One detail in particular was the recurring task / pet.tasks bug, where they might go out of sync.
+  If I had another iteration, I would iron out all the bugs that were mentioned when I asked Claude about all the possible edge cases that could possibly break it. One detail in particular was the recurring task / pet.tasks bug, where they might go out of sync.
 
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
 
-The most important thing I learned in this project was just about how powerful AI is as a drafter. I often have trouble setting up projects and files in a way that would not only make sense but also be structurally sound throughout the development of the project. However, with AI, I can start by understanding the high-level relationships, build my way up, getting more technical as I go. I honestly didn't think I would have enough time to finish this project, but the acceleration that AI provided me amazed me. I'm going to use this process in all of my further work.
+  The most important thing I learned in this project was just about how powerful AI is as a drafter. I often have trouble setting up projects and files in a way that would not only make sense but also be structurally sound throughout the development of the project. However, with AI, I can start by understanding the high-level relationships, build my way up, getting more technical as I go. I honestly didn't think I would have enough time to finish this project, but the acceleration that AI provided me amazed me. I'm going to use this process in all of my further work.
